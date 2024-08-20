@@ -1,6 +1,6 @@
 from buildhat import Motor
-from imu import IMU
-from lidar import Lidar
+from robot_systems.imu import IMU
+from robot_systems.lidar import Lidar
 import signal
 import sys
 import math
