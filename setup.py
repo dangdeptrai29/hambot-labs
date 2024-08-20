@@ -28,9 +28,9 @@ def create_and_install_in_virtualenv():
     print("Installing setuptools and wheel...")
     subprocess.check_call([python_bin, "-m", "pip", "install", "--upgrade", "setuptools", "wheel"])
 
-    # Now install the package
-    print("Installing HamBot package...")
-    subprocess.check_call([python_bin, "-m", "pip", "install", "."])
+    # Now install the package in editable mode
+    print("Installing HamBot package in editable mode...")
+    subprocess.check_call([python_bin, "-m", "pip", "install", "-e", "."])
 
     print(
         f"To activate the virtual environment in the future, run 'source {os.path.join(venv_dir, 'bin', 'activate')}'.")
