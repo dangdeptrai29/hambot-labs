@@ -1,44 +1,4 @@
-import os
-import sys
-import subprocess
 from setuptools import setup, find_packages
-
-
-def create_and_install_in_virtualenv():
-    venv_dir = "hambot_env"
-
-    if not os.path.exists(venv_dir):
-        print("Creating virtual environment...")
-        subprocess.check_call([sys.executable, "-m", "venv", venv_dir])
-        print(f"Virtual environment created at {venv_dir}.")
-    else:
-        print(f"Virtual environment already exists at {venv_dir}.")
-
-    # Determine the path to the Python interpreter in the virtual environment
-    if os.name == "nt":  # Windows
-        python_bin = os.path.join(venv_dir, "Scripts", "python")
-    else:  # Unix or MacOS
-        python_bin = os.path.join(venv_dir, "bin", "python")
-
-    # Upgrade pip in the virtual environment
-    print("Upgrading pip...")
-    subprocess.check_call([python_bin, "-m", "pip", "install", "--upgrade", "pip"])
-
-    # Explicitly install setuptools and wheel first to ensure they are available
-    print("Installing setuptools and wheel...")
-    subprocess.check_call([python_bin, "-m", "pip", "install", "--upgrade", "setuptools", "wheel"])
-
-    # Now install the package in editable mode
-    print("Installing HamBot package in editable mode...")
-    subprocess.check_call([python_bin, "-m", "pip", "install", "-e", "."])
-
-    print(
-        f"To activate the virtual environment in the future, run 'source {os.path.join(venv_dir, 'bin', 'activate')}'.")
-
-
-# Run the function if the script is executed directly
-if __name__ == "__main__":
-    create_and_install_in_virtualenv()
 
 setup(
     name="hambot",
