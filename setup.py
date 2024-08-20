@@ -20,8 +20,16 @@ def create_and_install_in_virtualenv():
     else:  # Unix or MacOS
         python_bin = os.path.join(venv_dir, "bin", "python")
 
-    # Upgrade pip and install the package in the virtual environment
+    # Upgrade pip in the virtual environment
+    print("Upgrading pip...")
     subprocess.check_call([python_bin, "-m", "pip", "install", "--upgrade", "pip"])
+
+    # Explicitly install setuptools and wheel first to ensure they are available
+    print("Installing setuptools and wheel...")
+    subprocess.check_call([python_bin, "-m", "pip", "install", "--upgrade", "setuptools", "wheel"])
+
+    # Now install the package
+    print("Installing HamBot package...")
     subprocess.check_call([python_bin, "-m", "pip", "install", "."])
 
     print(
