@@ -1,14 +1,15 @@
 import os
-import subprocess
 import sys
+import subprocess
 from setuptools import setup, find_packages
 
 
 # Function to create a virtual environment
-def create_virtualenv():
+def create_and_activate_virtualenv():
     venv_dir = "hambot_env"
 
     if not os.path.exists(venv_dir):
+        print("Creating virtual environment...")
         subprocess.check_call([sys.executable, "-m", "venv", venv_dir])
         print(f"Virtual environment created at {venv_dir}.")
     else:
@@ -16,18 +17,21 @@ def create_virtualenv():
 
     # Activate the virtual environment and install the package
     if os.name == "nt":  # Windows
-        activate_script = os.path.join(venv_dir, "Scripts", "activate")
+        activate_script = os.path.join(venv_dir, "Scripts", "activate.bat")
+        subprocess.check_call(
+            [activate_script, "&&", "pip", "install", "--upgrade", "pip", "&&", "pip", "install", "."])
     else:  # Unix or MacOS
         activate_script = os.path.join(venv_dir, "bin", "activate")
+        subprocess.check_call(f"source {activate_script} && pip install --upgrade pip && pip install .", shell=True)
 
-    print(f"To activate the virtual environment, run 'source {activate_script}'.")
-    print("After activation, run 'pip install .' to install the hambot package in the environment.")
+    print(f"To activate the virtual environment in the future, run 'source {activate_script}'.")
 
 
-# Run the function if the script is executed directly
+# If running directly, perform the virtual environment setup
 if __name__ == "__main__":
-    create_virtualenv()
+    create_and_activate_virtualenv()
 
+# Standard setup.py configuration
 setup(
     name="hambot",
     version="0.1",
@@ -40,14 +44,14 @@ setup(
         "adafruit-circuitpython-rplidar",
         "buildhat",
     ],
-    author="Chance J Hamilton",
+    author="Your Name",
     description="A library for controlling a HamBot robot with IMU, Lidar, Camera, and motor control using Build HAT.",
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/biorobaw/HamBot",  # Replace with your GitHub repo URL
+    url="https://github.com/yourusername/hambot",  # Replace with your GitHub repo URL
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.6',
 )
