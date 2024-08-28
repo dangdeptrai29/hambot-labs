@@ -6,7 +6,7 @@ HamBot is a Python library designed to control a robot equipped with various sen
 - **Motor Control** using the Raspberry Pi Build HAT.
 - **IMU Integration** with the BNO055 sensor for orientation and acceleration data.
 - **Lidar Integration** with the RPLidar for distance measurements.
-- **Camera Integration** with the Raspberry Pi Camera Board for image processing.
+- **Camera Integration** with the Raspberry Pi Camera Board for image processing and landmark detection.
 
 ## Getting Started
 
@@ -39,7 +39,7 @@ Before you begin, ensure you have met the following requirements:
    It's recommended to use a virtual environment to manage dependencies:
 
    ```bash
-   python3 -m venv hambot_env
+   python3 -m venv --system-sit-packages hambot_env
    source hambot_env/bin/activate
    ```
 
@@ -68,7 +68,7 @@ Before you begin, ensure you have met the following requirements:
 #### 3. **Camera (Raspberry Pi Camera Board v2)**
 
 - **Description**: The Raspberry Pi Camera Board v2 is an 8-megapixel camera capable of taking high-definition still photographs and videos. It's suitable for computer vision tasks in robotics.
-- **Library Documentation**: [Picamera Documentation](https://picamera.readthedocs.io/en/release-1.13/)
+- **Library Documentation**: [Picamera2 Documentation](https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf)
 
 #### 4. **Motor Controller (Build HAT)**
 
@@ -112,7 +112,20 @@ image = robot.camera.get_image()
 robot.camera.find_landmarks((255, 0, 0))  # Find red landmarks
 ```
 
-#### 5. **Control Motors**
+#### 5. **Detect Olive Green and White Landmarks with the Camera**
+
+```python
+# Detect landmarks of olive green and white colors
+olive_green_hsv = (70, 153, 102)
+white_hsv = (0, 0, 255)
+
+landmarks = robot.camera.find_landmarks([olive_green_hsv, white_hsv], tolerance=0.05, area_threshold=500)
+
+for landmark in landmarks:
+    print(f"Landmark at ({landmark.center_x}, {landmark.center_y}) with size {landmark.width}x{landmark.height}")
+```
+
+#### 6. **Control Motors**
 
 ```python
 # Set motor speeds
@@ -126,7 +139,7 @@ robot.run_motors_for_seconds(2)
 robot.stop_motors()
 ```
 
-#### 6. **Disconnect the Robot**
+#### 7. **Disconnect the Robot**
 
 ```python
 # Properly disconnect the robot
