@@ -7,7 +7,6 @@ setup(
     install_requires=[
         "numpy",
         "opencv-python",
-        "picamera",
         "adafruit-circuitpython-bno055",
         "adafruit-circuitpython-rplidar",
         "buildhat",

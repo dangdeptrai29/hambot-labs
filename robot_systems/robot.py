@@ -1,14 +1,16 @@
 from buildhat import Motor
-from robot_systems.imu import IMU
-from robot_systems.lidar import Lidar
+from robo_systems.imu import IMU
+from robo_systems.lidar import Lidar
+from robo_systems.camera import Camera
 import signal
 import sys
 import math
 import time
 import threading
 
+
 class HamBot:
-    def __init__(self, lidar_enabled=True):
+    def __init__(self, lidar_enabled=True, camera_enabled=True):
         # Initializes IMU
         self.imu = IMU()
 
@@ -31,6 +33,11 @@ class HamBot:
             self.lidar = Lidar()
         else :
             self.lidar = None
+
+        if camera_enabled:
+            self.camera = Camera()
+        else:
+            self.camera = None
 
         # Start the thread to update motor positions
         self.stop_thread = False
@@ -311,6 +318,8 @@ class HamBot:
         """
         if self.lidar is not None:
             self.lidar.stop_lidar()
+        if self.camera is not None:
+            self.camera.stop_camera()
         self.left_motor.run_to_position(0, blocking=False)
         self.right_motor.run_to_position(0)
         self.stop_motors()
