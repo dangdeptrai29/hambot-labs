@@ -7,6 +7,8 @@ setup(
     install_requires=[
         "numpy",
         "opencv-python",
+        "opencv-python-headless",
+        "tk",
         "adafruit-circuitpython-bno055",
         "adafruit-circuitpython-rplidar",
         "buildhat",
