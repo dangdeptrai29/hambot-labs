@@ -262,8 +262,17 @@ class HamBot:
         """
         left_speed = self.check_speed(left_speed)
         right_speed = self.check_speed(right_speed)
-        self.run_left_motor_for_rotations(rotations, speed=left_speed, blocking=False)
-        self.run_right_motor_for_rotations(rotations, speed=right_speed, blocking=True)
+
+        abs_left_speed = abs(left_speed)
+        abs_right_speed = abs(right_speed)
+
+        if abs_right_speed >= abs_left_speed:
+            self.run_left_motor_for_rotations(rotations, speed=left_speed, blocking=False)
+            self.run_right_motor_for_rotations(rotations, speed=right_speed, blocking=True)
+        else:
+            self.run_right_motor_for_rotations(rotations, speed=right_speed, blocking=False)
+            self.run_left_motor_for_rotations(rotations, speed=left_speed, blocking=True)
+
 
     def run_motors_for_seconds(self, seconds, left_speed=50, right_speed=50):
         """
