@@ -23,6 +23,7 @@ class Lidar:
         self.scan_thread = threading.Thread(target=self._scan)
         self.scan_thread.start()
 
+
     def _scan(self):
         """
         Continuously scan and update the range data in a 360-degree list.

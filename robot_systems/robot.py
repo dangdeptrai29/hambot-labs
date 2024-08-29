@@ -324,6 +324,7 @@ class HamBot:
         self.right_motor.run_to_position(0)
         self.stop_thread = True
         self.position_thread.join()
+        time.sleep(1)
         self.stop_motors()
 
 
