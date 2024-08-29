@@ -1,7 +1,7 @@
 from buildhat import Motor
 from robo_systems.imu import IMU
-from robo_systems.lidar import Lidar
-from robo_systems.camera import Camera
+from robot_systems.lidar import Lidar
+from robot_systems.camera import Camera
 import signal
 import sys
 import math
