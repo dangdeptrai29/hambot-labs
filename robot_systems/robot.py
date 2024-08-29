@@ -122,6 +122,15 @@ class HamBot:
         self.last_left_position = self.left_motor.get_position()
         self.last_right_position = self.right_motor.get_position()
 
+    def check_speed(self,input_speed):
+        if -75 <= input_speed <= 75:
+            return input_speed
+        elif input_speed < -75:
+            print("Speed must be between -75 and 75 revolutions per minute.")
+            return -75
+        elif input_speed > 75:
+            print("Speed must be between -75 and 75 revolutions per minute.")
+            return 75
     def set_left_motor_speed(self, speed_rpm):
         """
         Set the left motor speed in revolutions per minute (RPM).
@@ -131,12 +140,11 @@ class HamBot:
                                Positive values for forward, negative for reverse.
         """
         speed_rpm *= -1  # Inverting speed to match motor configuration
-        if -100 <= speed_rpm <= 100:
-            self.left_motor.start(speed=speed_rpm)
-        else:
-            raise ValueError("Speed must be between -100 and 100 revolutions per minute.")
+        speed_rpm = self.check_speed(speed_rpm)
+        self.left_motor.start(speed=speed_rpm)
 
-    def run_left_motor_for_seconds(self, seconds, speed=100, blocking=True):
+
+    def run_left_motor_for_seconds(self, seconds, speed=75, blocking=True):
         """
         Run the left motor for a specified number of seconds.
 
@@ -145,9 +153,10 @@ class HamBot:
             speed (float): The speed in RPM.
         """
         speed *= -1  # Inverting speed to match motor configuration
+        speed = self.check_speed(speed)
         self.left_motor.run_for_seconds(seconds, speed=speed, blocking=blocking)
 
-    def run_left_motor_for_rotations(self, rotations, speed=100, blocking=True):
+    def run_left_motor_for_rotations(self, rotations, speed=75, blocking=True):
         """
         Run the left motor for a specified number of rotations.
 
@@ -156,6 +165,7 @@ class HamBot:
             speed (float): The speed in RPM.
         """
         speed *= -1  # Inverting speed to match motor configuration
+        speed = self.check_speed(speed)
         self.left_motor.run_for_rotations(rotations, speed=speed, blocking=blocking)
 
     def run_left_motor_to_position(self, position, speed=100, blocking=True):
@@ -167,6 +177,7 @@ class HamBot:
             speed (float): The speed in RPM.
         """
         speed *= -1  # Inverting speed to match motor configuration
+        speed = self.check_speed(speed)
         self.left_motor.run_to_position(position, speed=speed, blocking=blocking)
 
     def stop_left_motor(self):
@@ -183,12 +194,10 @@ class HamBot:
             speed_rpm (float): Desired speed in revolutions per minute.
                                Positive values for forward, negative for reverse.
         """
-        if -100 <= speed_rpm <= 100:
-            self.right_motor.start(speed=speed_rpm)
-        else:
-            raise ValueError("Speed must be between -100 and 100 revolutions per minute.")
+        speed_rpm = self.check_speed(speed_rpm)
+        self.right_motor.start(speed_rpm)
 
-    def run_right_motor_for_seconds(self, seconds, speed=100, blocking=True):
+    def run_right_motor_for_seconds(self, seconds, speed=75, blocking=True):
         """
         Run the right motor for a specified number of seconds.
 
@@ -197,9 +206,10 @@ class HamBot:
             speed (float): The speed in RPM.
             blocking (bool): Whether the function should block until the operation is complete.
         """
+        speed = self.check_speed(speed)
         self.right_motor.run_for_seconds(seconds, speed=speed, blocking=blocking)
 
-    def run_right_motor_for_rotations(self, rotations, speed=100, blocking=True):
+    def run_right_motor_for_rotations(self, rotations, speed=75, blocking=True):
         """
         Run the right motor for a specified number of rotations.
 
@@ -208,9 +218,10 @@ class HamBot:
             speed (float): The speed in RPM.
             blocking (bool): Whether the function should block until the operation is complete.
         """
+        speed = self.check_speed(speed)
         self.right_motor.run_for_rotations(rotations, speed=speed, blocking=blocking)
 
-    def run_right_motor_to_position(self, position, speed=100, blocking=True):
+    def run_right_motor_to_position(self, position, speed=75, blocking=True):
         """
         Run the right motor to a specified position.
 
@@ -219,6 +230,7 @@ class HamBot:
             speed (float): The speed in RPM.
             blocking (bool): Whether the function should block until the operation is complete.
         """
+        speed = self.check_speed(speed)
         self.right_motor.run_to_position(position, speed=speed, blocking=blocking)
 
     def stop_right_motor(self):
@@ -248,6 +260,8 @@ class HamBot:
         This method runs both motors for the given number of rotations, with the left motor running
         asynchronously and the right motor running synchronously to ensure accurate movement.
         """
+        left_speed = self.check_speed(left_speed)
+        right_speed = self.check_speed(right_speed)
         self.run_left_motor_for_rotations(rotations, speed=left_speed, blocking=False)
         self.run_right_motor_for_rotations(rotations, speed=right_speed, blocking=True)
 
@@ -263,6 +277,8 @@ class HamBot:
         This method runs both motors for the given duration, with the left motor running
         asynchronously and the right motor running synchronously to ensure consistent movement.
         """
+        left_speed = self.check_speed(left_speed)
+        right_speed = self.check_speed(right_speed)
         self.run_left_motor_for_seconds(seconds, speed=left_speed, blocking=False)
         self.run_right_motor_for_seconds(seconds, speed=right_speed, blocking=True)
 
