@@ -322,9 +322,10 @@ class HamBot:
             self.camera.stop_camera()
         self.left_motor.run_to_position(0, blocking=False)
         self.right_motor.run_to_position(0)
-        self.stop_motors()
         self.stop_thread = True
         self.position_thread.join()
+        self.stop_motors()
+
 
     def shutdown(self, signum, frame):
         """
