@@ -15,10 +15,10 @@ class HamBot:
         self.imu = IMU()
 
         # Initializes Motors and Encoders
-        self.left_motor = Motor('A')
+        self.left_motor = Motor('B')
         self.left_motor.set_speed_unit_rpm(rpm=True)
 
-        self.right_motor = Motor('B')
+        self.right_motor = Motor('A')
         self.right_motor.set_speed_unit_rpm(rpm=True)
 
         # Initialize rotation tracking
@@ -82,6 +82,7 @@ class HamBot:
         return self.imu.get_heading()
 
     def update_motor_positions(self):
+        # TODO flip right motor backwards
         """Threaded method to update the motor positions continuously."""
         while not self.stop_thread:
             # Update left motor
@@ -139,7 +140,6 @@ class HamBot:
             speed_rpm (float): Desired speed in revolutions per minute.
                                Positive values for forward, negative for reverse.
         """
-        speed_rpm *= -1  # Inverting speed to match motor configuration
         speed_rpm = self.check_speed(speed_rpm)
         self.left_motor.start(speed=speed_rpm)
 
@@ -152,7 +152,6 @@ class HamBot:
             seconds (float): The duration to run the motor.
             speed (float): The speed in RPM.
         """
-        speed *= -1  # Inverting speed to match motor configuration
         speed = self.check_speed(speed)
         self.left_motor.run_for_seconds(seconds, speed=speed, blocking=blocking)
 
@@ -164,7 +163,6 @@ class HamBot:
             rotations (float): The number of rotations to run the motor.
             speed (float): The speed in RPM.
         """
-        speed *= -1  # Inverting speed to match motor configuration
         speed = self.check_speed(speed)
         self.left_motor.run_for_rotations(rotations, speed=speed, blocking=blocking)
 
@@ -176,7 +174,6 @@ class HamBot:
             position (float): The target position in degrees.
             speed (float): The speed in RPM.
         """
-        speed *= -1  # Inverting speed to match motor configuration
         speed = self.check_speed(speed)
         self.left_motor.run_to_position(position, speed=speed, blocking=blocking)
 
@@ -194,6 +191,7 @@ class HamBot:
             speed_rpm (float): Desired speed in revolutions per minute.
                                Positive values for forward, negative for reverse.
         """
+        speed_rpm *= -1  # Inverting speed to match motor configuration
         speed_rpm = self.check_speed(speed_rpm)
         self.right_motor.start(speed_rpm)
 
@@ -206,6 +204,7 @@ class HamBot:
             speed (float): The speed in RPM.
             blocking (bool): Whether the function should block until the operation is complete.
         """
+        speed *= -1  # Inverting speed to match motor configuration
         speed = self.check_speed(speed)
         self.right_motor.run_for_seconds(seconds, speed=speed, blocking=blocking)
 
@@ -218,6 +217,7 @@ class HamBot:
             speed (float): The speed in RPM.
             blocking (bool): Whether the function should block until the operation is complete.
         """
+        speed *= -1  # Inverting speed to match motor configuration
         speed = self.check_speed(speed)
         self.right_motor.run_for_rotations(rotations, speed=speed, blocking=blocking)
 
@@ -230,6 +230,7 @@ class HamBot:
             speed (float): The speed in RPM.
             blocking (bool): Whether the function should block until the operation is complete.
         """
+        speed *= -1  # Inverting speed to match motor configuration
         speed = self.check_speed(speed)
         self.right_motor.run_to_position(position, speed=speed, blocking=blocking)
 
