@@ -12,6 +12,7 @@ setup(
         "adafruit-circuitpython-bno055",
         "adafruit-circuitpython-rplidar",
         "buildhat",
+        "sshkeyboard",
     ],
     author="Chance J Hamilton",
     description="A library for controlling a HamBot robot with IMU, Lidar, Camera, and motor control using Build HAT.",
