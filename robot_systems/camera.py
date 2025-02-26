@@ -79,11 +79,11 @@ class Camera:
             list: A list of Landmark objects representing detected objects.
         """
         if self.image is None:
-            print("No image captured yet.")
+
             return []
 
         if not self.landmark_colors:
-            print("No landmark colors set.")
+
             return []
 
         # Convert tolerance to absolute range for RGB
