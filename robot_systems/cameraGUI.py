@@ -2,107 +2,107 @@ from picamera2 import Picamera2
 import cv2
 import numpy as np
 import tkinter as tk
-from tkinter import Scale, Entry, Label, Button
+from tkinter import Scale, Button
+import os
 
-class GUICamera:
+class SimpleRGBPicker:
     def __init__(self):
-        # Initialize the Picamera2
+        # Initialize PiCamera2
         self.picam2 = Picamera2()
-        config = self.picam2.create_preview_configuration(main={"format": "RGB888", "size": (640, 480)})
+        config = self.picam2.create_preview_configuration(main={"format": "RGB888", "size": (320, 240)})
         self.picam2.configure(config)
         self.picam2.start()
 
-        # Create the main window
+        # Check if running in a GUI environment
+        self.has_display = "DISPLAY" in os.environ
+
+        # Create main Tkinter window
         self.root = tk.Tk()
-        self.root.title("HSV Color Picker")
+        self.root.title("RGB Color Selector")
 
-        # HSV sliders and tolerance input
-        self.hue_slider = Scale(self.root, from_=0, to=179, orient=tk.HORIZONTAL, label="Hue")
-        self.hue_slider.pack()
+        # RGB sliders
+        self.red_slider = Scale(self.root, from_=0, to=255, orient=tk.HORIZONTAL, label="Red")
+        self.red_slider.pack()
+        self.green_slider = Scale(self.root, from_=0, to=255, orient=tk.HORIZONTAL, label="Green")
+        self.green_slider.pack()
+        self.blue_slider = Scale(self.root, from_=0, to=255, orient=tk.HORIZONTAL, label="Blue")
+        self.blue_slider.pack()
 
-        self.sat_slider = Scale(self.root, from_=0, to=255, orient=tk.HORIZONTAL, label="Saturation")
-        self.sat_slider.pack()
+        # Tolerance slider
+        self.tolerance_slider = Scale(self.root, from_=0, to=100, orient=tk.HORIZONTAL, label="Tolerance (%)")
+        self.tolerance_slider.set(10)  # Default to 10% tolerance
+        self.tolerance_slider.pack()
 
-        self.val_slider = Scale(self.root, from_=0, to=255, orient=tk.HORIZONTAL, label="Value")
-        self.val_slider.pack()
-
-        self.tolerance_label = Label(self.root, text="Tolerance (0-1)")
-        self.tolerance_label.pack()
-
-        self.tolerance_entry = Entry(self.root)
-        self.tolerance_entry.insert(0, "0.05")
-        self.tolerance_entry.pack()
-
+        # Quit button
         self.quit_button = Button(self.root, text="Quit", command=self.quit)
         self.quit_button.pack()
 
-        # Start the update loop
+        # Mouse click coordinates
+        self.click_x, self.click_y = None, None
+
+        # Start image update loop
         self.update_image()
         self.root.protocol("WM_DELETE_WINDOW", self.quit)
         self.root.mainloop()
 
     def update_image(self):
-        # Capture a frame from the Picamera2
+        # Capture frame
         frame = self.picam2.capture_array()
+        frame = cv2.flip(frame, 0)  # Flip to correct orientation
 
-        # Convert the frame to HSV color space
-        hsv_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+        # Get RGB and tolerance values
+        r = self.red_slider.get()
+        g = self.green_slider.get()
+        b = self.blue_slider.get()
+        tolerance = self.tolerance_slider.get() / 100.0  # Convert to fraction
 
-        # Get current HSV and tolerance values
-        h = self.hue_slider.get()
-        s = self.sat_slider.get()
-        v = self.val_slider.get()
-        tolerance = float(self.tolerance_entry.get())
+        # Define color bounds
+        lower_bound = np.array([max(0, r - int(255 * tolerance)),
+                                max(0, g - int(255 * tolerance)),
+                                max(0, b - int(255 * tolerance))])
+        upper_bound = np.array([min(255, r + int(255 * tolerance)),
+                                min(255, g + int(255 * tolerance)),
+                                min(255, b + int(255 * tolerance))])
 
-        # Define the lower and upper bounds for color detection
-        lower_bound = np.array([h - int(179 * tolerance), s - int(255 * tolerance), v - int(255 * tolerance)])
-        upper_bound = np.array([h + int(179 * tolerance), s + int(255 * tolerance), v + int(255 * tolerance)])
-        lower_bound = np.clip(lower_bound, [0, 0, 0], [179, 255, 255])
-        upper_bound = np.clip(upper_bound, [0, 0, 0], [179, 255, 255])
+        # Create mask for color detection
+        mask = cv2.inRange(frame, lower_bound, upper_bound)
 
-        # Create a mask based on the current HSV values and tolerance
-        mask = cv2.inRange(hsv_frame, lower_bound, upper_bound)
-
-        # Find contours
+        # Find contours in the mask
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Set an area threshold to filter out small contours
-        area_threshold = 500  # Adjust this value based on your needs
-
+        # Draw bounding boxes
         for contour in contours:
-            area = cv2.contourArea(contour)
-            if area > area_threshold:
+            if cv2.contourArea(contour) > 100:  # Ignore small noise
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        # Convert the image from RGB to BGR for OpenCV compatibility
-        bgr_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        # If a click happened, update the RGB sliders to match the pixel color
+        if self.click_x is not None and self.click_y is not None:
+            clicked_color = frame[self.click_y, self.click_x]
+            self.red_slider.set(int(clicked_color[0]))
+            self.green_slider.set(int(clicked_color[1]))
+            self.blue_slider.set(int(clicked_color[2]))
+            self.click_x, self.click_y = None, None  # Reset click after updating
 
-        # Convert the image to PhotoImage format for Tkinter
-        img = cv2.cvtColor(bgr_frame, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, (640, 480))  # Resize to fit Tkinter window
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGBA)
-        img = np.array(img)
-        img = cv2.flip(img, 1)  # Optional: Flip image if needed
+        # Show the image using OpenCV's GUI
+        if self.has_display:
+            cv2.imshow("Live Feed", frame)
+            cv2.setMouseCallback("Live Feed", self.get_pixel_color)  # Attach mouse event
+            cv2.waitKey(1)
 
-        # Display the image in the GUI
-        self.photo = tk.PhotoImage(width=img.shape[1], height=img.shape[0], data=cv2.imencode('.png', img)[1].tobytes())
-        if not hasattr(self, 'label'):
-            self.label = tk.Label(self.root, image=self.photo)
-            self.label.pack()
-        else:
-            self.label.config(image=self.photo)
-            self.label.image = self.photo
+        # Schedule next update
+        self.root.after(30, self.update_image)
 
-        # Schedule the next update
-        self.root.after(10, self.update_image)
+    def get_pixel_color(self, event, x, y, flags, param):
+        """Store clicked pixel coordinates."""
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.click_x, self.click_y = x, y
 
     def quit(self):
-        # Stop the camera and close the GUI
+        """Exit the program cleanly."""
         self.picam2.stop()
+        if self.has_display:
+            cv2.destroyAllWindows()
         self.root.quit()
         self.root.destroy()
 
-# To use the GUI camera, create an instance of GUICamera
-gui_camera = GUICamera()

@@ -1,5 +1,4 @@
 from picamera2 import Picamera2
-from robot_systems.landmark import Landmark
 import numpy as np
 import threading
 import time
@@ -8,19 +7,55 @@ import os
 
 os.environ['LIBCAMERA_LOG_LEVELS'] = '*:ERROR'
 
+
+class Landmark:
+    def __init__(self, x, y, width, height, r, g, b):
+        """
+        Represents a detected landmark in the camera frame.
+
+        Args:
+            x (int): X-coordinate of the center of the landmark.
+            y (int): Y-coordinate of the center of the landmark.
+            width (int): Width of the bounding box.
+            height (int): Height of the bounding box.
+            r (int): Red component of detected color.
+            g (int): Green component of detected color.
+            b (int): Blue component of detected color.
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.r = r
+        self.g = g
+        self.b = b
+
+    def __repr__(self):
+        return f"Landmark(x={self.x}, y={self.y}, w={self.width}, h={self.height}, R={self.r}, G={self.g}, B={self.b})"
+
+
 class Camera:
     def __init__(self, fps=5):
+        """
+        Initializes the camera and starts capturing images in a separate thread.
+        Default FPS is 5 to balance performance and responsiveness.
+        """
         self.picam2 = Picamera2()
-        self.picam2.start_preview()
-        self.picam2.configure(self.picam2.create_preview_configuration(main={"size": (640, 480)}))
+        self.picam2.configure(self.picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"}))
         self.picam2.start()
+
         self.fps = fps
         self.image = None
         self.running = True
+        self.landmark_colors = []  # List of colors to detect
+        self.tolerance = 0.05  # Default tolerance (5%)
+
+        # Start image capturing thread
         self.camera_thread = threading.Thread(target=self._capture_images)
         self.camera_thread.start()
 
     def _capture_images(self):
+        """Continuously captures frames at the defined FPS."""
         while self.running:
             self.image = self.picam2.capture_array()
             time.sleep(1 / self.fps)
@@ -32,70 +67,80 @@ class Camera:
         """
         return self.image
 
-    def find_landmarks(self, hsv_values, tolerance=0.05, area_threshold=500):
+    def set_landmark_colors(self, colors, tolerance=0.05):
         """
-        Processes the latest image to find landmarks of specific HSV colors.
-        Returns a list of Landmark objects, each representing a detected object.
+        Updates the list of colors to be detected as landmarks.
 
         Args:
-            hsv_values (tuple or list of tuples): A tuple containing the HSV values to detect,
-                                                  or a list of such tuples.
-            tolerance (float): Tolerance for color matching in HSV space. Default is 0.05 (5%).
-            area_threshold (int): Minimum area of contours to consider as landmarks. Default is 500 pixels.
+            colors (list of tuples): List of (R, G, B) tuples to detect.
+            tolerance (float): Tolerance for color matching (0 to 1). Default is 5%.
+        """
+        self.landmark_colors = colors if isinstance(colors, list) else [colors]
+        self.tolerance = max(0, min(1, tolerance))  # Ensure tolerance is within [0,1]
+
+    def find_landmarks(self, area_threshold=500):
+        """
+        Detects regions in the image matching the stored landmark colors.
+
+        Args:
+            area_threshold (int): Minimum area of a detected region to be considered a landmark.
 
         Returns:
-            list: A list of Landmark objects, each containing the center coordinates, width,
-                  and height of the bounding box in pixels.
+            list: A list of Landmark objects representing detected objects.
         """
         if self.image is None:
             print("No image captured yet.")
             return []
 
-        # Convert the image to HSV color space
-        hsv_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
+        if not self.landmark_colors:
+            print("No landmark colors set.")
+            return []
 
-        # Convert tolerance from percentage to absolute range for each HSV channel
-        tolerance_h = int(180 * tolerance)  # Hue range is 0-180
-        tolerance_sv = int(255 * tolerance)  # Saturation and Value range is 0-255
+        # Convert tolerance to absolute range for RGB
+        tolerance_val = int(255 * self.tolerance)
 
-        if isinstance(hsv_values, tuple):
-            hsv_values = [hsv_values]  # Convert to list if a single value is provided
+        # Create an empty mask for the detected colors
+        mask_total = np.zeros(self.image.shape[:2], dtype=np.uint8)
 
-        mask_total = np.zeros(hsv_image.shape[:2], dtype=np.uint8)
+        detected_landmarks = []
 
-        for hsv_value in hsv_values:
-            lower_bound = np.array(
-                [hsv_value[0] - tolerance_h, hsv_value[1] - tolerance_sv, hsv_value[2] - tolerance_sv])
-            upper_bound = np.array(
-                [hsv_value[0] + tolerance_h, hsv_value[1] + tolerance_sv, hsv_value[2] + tolerance_sv])
+        for rgb_value in self.landmark_colors:
+            lower_bound = np.array([
+                max(0, rgb_value[0] - tolerance_val),
+                max(0, rgb_value[1] - tolerance_val),
+                max(0, rgb_value[2] - tolerance_val)
+            ])
+            upper_bound = np.array([
+                min(255, rgb_value[0] + tolerance_val),
+                min(255, rgb_value[1] + tolerance_val),
+                min(255, rgb_value[2] + tolerance_val)
+            ])
 
-            # Ensure the bounds are within valid HSV ranges
-            lower_bound = np.clip(lower_bound, [0, 0, 0], [180, 255, 255])
-            upper_bound = np.clip(upper_bound, [0, 0, 0], [180, 255, 255])
-
-            # Create a mask for the current color
-            mask = cv2.inRange(hsv_image, lower_bound, upper_bound)
+            # Create mask for current color range
+            mask = cv2.inRange(self.image, lower_bound, upper_bound)
             mask_total = cv2.bitwise_or(mask_total, mask)
 
-        # Find contours based on the combined mask
+        # Find contours in the combined mask
         contours, _ = cv2.findContours(mask_total, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        landmarks = []
         for contour in contours:
             area = cv2.contourArea(contour)
             if area > area_threshold:
                 x, y, w, h = cv2.boundingRect(contour)
                 center_x = x + w // 2
                 center_y = y + h // 2
-                landmarks.append(Landmark(center_x, center_y, w, h))
 
-        return landmarks
+                # Get the color from the image at the detected landmark center
+                detected_color = self.image[center_y, center_x]
+                detected_landmarks.append(Landmark(center_x, center_y, w, h,
+                                                   int(detected_color[0]),
+                                                   int(detected_color[1]),
+                                                   int(detected_color[2])))
+
+        return detected_landmarks
 
     def stop_camera(self):
-        """
-        Stops the camera and the image capturing thread.
-        """
+        """Stops the camera and the image capturing thread."""
         self.running = False
         self.camera_thread.join()
-        self.picam2.stop_preview()
         self.picam2.close()
