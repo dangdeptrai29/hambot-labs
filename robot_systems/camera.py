@@ -10,18 +10,7 @@ os.environ['LIBCAMERA_LOG_LEVELS'] = '*:ERROR'
 
 class Landmark:
     def __init__(self, x, y, width, height, r, g, b):
-        """
-        Represents a detected landmark in the camera frame.
-
-        Args:
-            x (int): X-coordinate of the center of the landmark.
-            y (int): Y-coordinate of the center of the landmark.
-            width (int): Width of the bounding box.
-            height (int): Height of the bounding box.
-            r (int): Red component of detected color.
-            g (int): Green component of detected color.
-            b (int): Blue component of detected color.
-        """
+        """Represents a detected landmark in the camera frame."""
         self.x = x
         self.y = y
         self.width = width
@@ -41,8 +30,12 @@ class Camera:
         Default FPS is 5 to balance performance and responsiveness.
         """
         self.picam2 = Picamera2()
-        self.picam2.configure(self.picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"}))
+        config = self.picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"})
+        self.picam2.configure(config)
         self.picam2.start()
+
+        # Store image width and height
+        self.width, self.height = config["main"]["size"]
 
         self.fps = fps
         self.image = None
@@ -61,10 +54,7 @@ class Camera:
             time.sleep(1 / self.fps)
 
     def get_image(self):
-        """
-        Returns the latest image captured by the camera as a numpy array.
-        The array is in the format (height, width, RGB).
-        """
+        """Returns the latest image captured by the camera as a numpy array (height, width, RGB)."""
         return self.image
 
     def set_landmark_colors(self, colors, tolerance=0.05):
@@ -100,7 +90,7 @@ class Camera:
         tolerance_val = int(255 * self.tolerance)
 
         # Create an empty mask for the detected colors
-        mask_total = np.zeros(self.image.shape[:2], dtype=np.uint8)
+        mask_total = np.zeros((self.height, self.width), dtype=np.uint8)
 
         detected_landmarks = []
 
