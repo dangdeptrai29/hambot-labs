@@ -11,7 +11,7 @@ setup(
         "tk",
         "adafruit-circuitpython-bno055",
         "adafruit-circuitpython-rplidar",
-        "import adafruit_ssd1306",
+        "adafruit_ssd1306",
         "buildhat",
         "sshkeyboard",
     ],
