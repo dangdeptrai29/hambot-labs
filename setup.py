@@ -12,6 +12,8 @@ setup(
         "adafruit-circuitpython-bno055",
         "adafruit-circuitpython-rplidar",
         "adafruit-circuitpython-ssd1306",
+        "Adafruit-Blinka",
+        "Pillow",
         "buildhat",
         "sshkeyboard",
     ],
