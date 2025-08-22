@@ -5,15 +5,15 @@ HamBot is a Python library designed to control a robot equipped with various sen
 ![Pi Camera](docs/figures/hambot_dims.png)
 ## Technical Specifications
 
-| Component                  | Specification |
-|-----------------------------|---------------|
-| Wheel Diameter / Radius     | 90 mm / 45 mm |
-| Axel Length (wheel spacing) | 184 mm        |
-| Max Motor Speed             | 170 RPM (approx. 26 rad/s) |
+| Component                  | Specification                                                                                                                                                                                                            |
+|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Wheel Diameter / Radius     | 90 mm / 45 mm                                                                                                                                                                                                            |
+| Axel Length (wheel spacing) | 184 mm                                                                                                                                                                                                                   |
+| Max Motor Speed             | 75 RPM (approx. 26 rad/s)                                                            <br/>                                                                                                                               |
 | Drive Motors                | LEGO Technic Large Angular Motors via Raspberry Pi Build HAT ([Datasheet](https://le-www-live-s.legocdn.com/sc/media/files/support/spike-prime/techspecs_techniclargeangularmotor-1b79e2f4fbb292aaf40c97fec0c31fff.pdf)) |
-| IMU                         | Adafruit BNO055 Absolute Orientation Sensor |
-| LiDAR                       | Slamtec RPLidar (360° scanning) |
-| Camera                      | Raspberry Pi Camera Board v2 (8 MP) |
+| IMU                         | Adafruit BNO055 Absolute Orientation Sensor                                                                                                                                                                              |
+| LiDAR                       | Slamtec RPLidar (360° scanning)                                                                                                                                                                                          |
+| Camera                      | Raspberry Pi Camera Board v2 (8 MP)                                                                                                                                                                                      |
 
 ---
 ## Features
