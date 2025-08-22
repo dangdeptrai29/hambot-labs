@@ -1,6 +1,6 @@
 # HamBot: A Python Library for Robot Control
 
-HamBot is a Python library designed to control a robot equipped with various sensors, including IMU, Lidar, and Camera. The library is built to simplify robot programming, providing easy-to-use interfaces for sensor data acquisition and motor control.
+HamBot is a Python library designed to control a robot equipped with various sensors, including IMU, Lidar, and Camera. The library simplifies robot programming, providing easy-to-use interfaces for sensor data acquisition and motor control.
 
 ## Features
 - **Motor Control** using the Raspberry Pi Build HAT.
@@ -11,13 +11,10 @@ HamBot is a Python library designed to control a robot equipped with various sen
 ## Getting Started
 
 ### Prerequisites
-
-Before you begin, ensure you have met the following requirements:
-
-- A Raspberry Pi running Raspberry Pi OS.
+- Raspberry Pi running Raspberry Pi OS.
 - Python 3.6 or higher.
-- Access to the Raspberry Pi GPIO pins for motor control.
-- The following hardware components:
+- Access to Raspberry Pi GPIO pins for motor control.
+- Hardware components:
   - **IMU Sensor**: BNO055 (Adafruit CircuitPython library)
   - **Lidar Sensor**: RPLidar (Adafruit CircuitPython library)
   - **Camera**: Raspberry Pi Camera Board v2 - 8 Megapixels
@@ -25,135 +22,111 @@ Before you begin, ensure you have met the following requirements:
 
 ### Installation
 
-1. **Clone the Repository**
+```bash
+git clone https://github.com/yourusername/robot_systems.git
+cd robot_systems
+python3 -m venv --system-site-packages hambot_env
+source hambot_env/bin/activate
+pip install -e .
+````
 
-   Clone this repository to your local machine:
+## Hardware Components
 
-   ```bash
-   git clone https://github.com/yourusername/robot_systems.git
-   cd robot_systems
-   ```
+Each component has its own documentation file with technical details and code examples:
 
-2. **Set Up a Virtual Environment**
+* [IMU Sensor (BNO055)](docs/IMU.md)
+* [Lidar Sensor (RPLidar)](docs/lidar.md)
+* [Camera (Raspberry Pi Camera v2)](docs/camera.md)
+* [Motors (Build HAT)](docs/motors.md)
 
-   It's recommended to use a virtual environment to manage dependencies:
+## Class Outline
 
-   ```bash
-   python3 -m venv --system-sit-packages hambot_env
-   source hambot_env/bin/activate
-   ```
+The main entry point is the **HamBot** class (`robot_systems/robot.py`):
 
-3. **Install Dependencies**
+```python
+from robot_systems.imu import IMU
+from robot_systems.lidar import Lidar
+from robot_systems.camera import Camera
+from buildhat import Motor
 
-   Install the required Python libraries:
+class HamBot:
+    def __init__(self, lidar_enabled=True, camera_enabled=True):
+        self.imu = IMU()               # Orientation & heading
+        self.left_motor = Motor('B')   # Left wheel
+        self.right_motor = Motor('A')  # Right wheel
+        self.lidar = Lidar() if lidar_enabled else None
+        self.camera = Camera() if camera_enabled else None
+        # ... encoder tracking, shutdown handling ...
+```
 
-   ```bash
-   pip install -e .
-   ```
+This class provides:
 
-   This command installs the `robot_systems` package and its dependencies.
+* `get_heading()` → orientation from the IMU
+* `get_range_image()` → 360° scan from the Lidar
+* `camera.get_image()` and `camera.find_landmarks()` → image capture and landmark detection
+* Motor functions (`set_left_motor_speed`, `run_motors_for_seconds`, etc.)
+* Encoder readings for odometry
+* Safe shutdown/disconnect
+---
+## Usage Examples
 
-### Hardware Components
+Below are basic examples of how to use each component through the `HamBot` class.
 
-#### 1. **IMU Sensor (BNO055)**
+### IMU: Get Heading
+```python
+from robot_systems.robot import HamBot
 
-- **Description**: The BNO055 is an advanced 9-axis sensor that provides absolute orientation, acceleration, and magnetic field strength. It simplifies sensor integration by fusing sensor data into a stable output.
-- **Library Documentation**: [Adafruit CircuitPython BNO055](https://docs.circuitpython.org/projects/bno055/en/latest/)
+bot = HamBot(lidar_enabled=False, camera_enabled=False)
+print("Heading (°):", bot.get_heading())
+````
 
-#### 2. **Lidar Sensor (RPLidar)**
-
-- **Description**: The RPLidar is a low-cost Lidar sensor capable of scanning 360° surroundings and producing a 2D range image. It's commonly used in robotics for mapping and navigation.
-- **Library Documentation**: [Adafruit CircuitPython RPLidar](https://docs.circuitpython.org/projects/rplidar/en/latest/)
-
-#### 3. **Camera (Raspberry Pi Camera Board v2)**
-
-- **Description**: The Raspberry Pi Camera Board v2 is an 8-megapixel camera capable of taking high-definition still photographs and videos. It's suitable for computer vision tasks in robotics.
-- **Library Documentation**: [Picamera2 Documentation](https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf)
-
-#### 4. **Motor Controller (Build HAT)**
-
-- **Description**: The Build HAT by Raspberry Pi is a motor controller that allows easy interfacing with LEGO motors and sensors, making it ideal for educational robotics projects.
-- **Library Documentation**: [Build HAT Documentation](https://buildhat.readthedocs.io/en/latest/)
-
-### Usage Examples
-
-Below are some examples of how to use the `HamBot` class to control the robot and interact with the sensors.
-
-#### 1. **Initialize the HamBot**
+### LiDAR: Get Range Image
 
 ```python
 from robot_systems.robot import HamBot
 
-# Initialize the HamBot
-robot = HamBot()
+bot = HamBot(camera_enabled=False)
+scan = bot.get_range_image()
+print("Front distance (mm):", scan[180])
 ```
 
-#### 2. **Get IMU Heading**
+### Camera: Detect Landmarks
 
 ```python
-# Get the current heading from the IMU
-heading = robot.get_heading()
-print(f"Robot heading: {heading}°")
+from robot_systems.robot import HamBot
+
+bot = HamBot(lidar_enabled=False)
+bot.camera.set_landmark_colors([(255, 0, 0)], tolerance=0.08)  # detect red
+landmarks = bot.camera.find_landmarks()
+print("Landmarks:", landmarks)
 ```
 
-#### 3. **Get Lidar Range Image**
+### Motors: Drive Forward
 
 ```python
-# Get the current range image from the Lidar
-range_image = robot.get_range_image()
-print(f"Range image: {range_image[:10]}")  # Print the first 10 values
+from robot_systems.robot import HamBot
+import time
+
+bot = HamBot(lidar_enabled=False, camera_enabled=False)
+
+# Move forward for 2 seconds
+bot.set_left_motor_speed(-50)   # left motor reversed
+bot.set_right_motor_speed(50)   # right motor forward
+time.sleep(2)
+
+bot.stop_motors()
 ```
 
-#### 4. **Capture an Image with the Camera**
 
-```python
-# Capture an image and process it
-image = robot.camera.get_image()
-robot.camera.find_landmarks((255, 0, 0))  # Find red landmarks
-```
+## Contributing
 
-#### 5. **Detect Olive Green and White Landmarks with the Camera**
+Contributions are welcome! Please submit a pull request or open an issue.
 
-```python
-# Detect landmarks of olive green and white colors
-olive_green_hsv = (70, 153, 102)
-white_hsv = (0, 0, 255)
+## License
 
-landmarks = robot.camera.find_landmarks([olive_green_hsv, white_hsv], tolerance=0.05, area_threshold=500)
+MIT License – see [LICENSE](LICENSE)
 
-for landmark in landmarks:
-    print(f"Landmark at ({landmark.center_x}, {landmark.center_y}) with size {landmark.width}x{landmark.height}")
-```
-
-#### 6. **Control Motors**
-
-```python
-# Set motor speeds
-robot.set_left_motor_speed(50)  # Set left motor to 50 RPM
-robot.set_right_motor_speed(50)  # Set right motor to 50 RPM
-
-# Run motors for 2 seconds
-robot.run_motors_for_seconds(2)
-
-# Stop the motors
-robot.stop_motors()
-```
-
-#### 7. **Disconnect the Robot**
-
-```python
-# Properly disconnect the robot
-robot.disconnect_robot()
-```
-
-### Contributing
-
-Contributions are welcome! Please submit a pull request or open an issue to discuss any changes or improvements.
-
-### License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### Acknowledgments
+## Acknowledgments
 
 Special thanks to the developers of the libraries and hardware components used in this project.
+
