@@ -38,8 +38,7 @@ class Lidar:
                         for _, angle, distance in scan:
                             # Convert angle to match the required orientation (0° at back, 180° at front)
                             adjusted_angle = (angle + 180) % 360
-                            if distance > 0:  # Only update if the distance is valid
-                                self.scan_data[min(359, floor(adjusted_angle))] = distance
+                            self.scan_data[min(359, floor(adjusted_angle))] = distance
                     if not self.running:
                         break
                 time.sleep(self.lidar_sleep)  # Short delay to prevent high CPU usage
