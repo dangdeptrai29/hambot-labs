@@ -12,7 +12,8 @@ import threading
 class HamBot:
     def __init__(self, lidar_enabled=True, camera_enabled=True):
         # Initializes IMU
-        self.imu = IMU()
+        self.imu = IMU(poll_hz=20.0)
+        self.imu.start()
 
         # Initializes Motors and Encoders
         self.left_motor = Motor('B')
@@ -67,19 +68,23 @@ class HamBot:
             print("Lidar is not enabled.")
             return -1
 
-    def get_heading(self):
-        """
-        Retrieve the current heading of the robot in degrees.
-
-        Returns:
-            float: The heading of the robot relative to East (0° to 360°).
-
-        This function fetches the current heading from the IMU, which indicates
-        the direction the robot is facing. The heading is adjusted to reflect the
-        orientation relative to East, with 0° representing East, 90° representing North,
-        180° representing West, and 270° representing South.
-        """
-        return self.imu.get_heading()
+    def get_heading(self, fresh_within=0.5, blocking=False, wait_timeout=0.3):
+        return self.imu.get_heading(fresh_within=fresh_within,
+                                    blocking=blocking,
+                                    wait_timeout=wait_timeout)
+    # def get_heading(self):
+    #     """
+    #     Retrieve the current heading of the robot in degrees.
+    #
+    #     Returns:
+    #         float: The heading of the robot relative to East (0° to 360°).
+    #
+    #     This function fetches the current heading from the IMU, which indicates
+    #     the direction the robot is facing. The heading is adjusted to reflect the
+    #     orientation relative to East, with 0° representing East, 90° representing North,
+    #     180° representing West, and 270° representing South.
+    #     """
+    #     return self.imu.get_heading()
 
     def update_motor_positions(self):
         # TODO flip right motor backwards
@@ -354,6 +359,7 @@ class HamBot:
         self.position_thread.join()
         time.sleep(1)
         self.stop_motors()
+        self.imu.stop()
 
 
     def shutdown(self, signum, frame):
