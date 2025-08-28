@@ -1,13 +1,8 @@
+import math, time, threading, sys, signal
 from buildhat import Motor
 from robot_systems.imu import IMU
 from robot_systems.lidar import Lidar
 from robot_systems.camera import Camera
-import signal
-import sys
-import math
-import time
-import threading
-
 
 class HamBot:
     def __init__(self, lidar_enabled=True, camera_enabled=True):
@@ -341,24 +336,19 @@ class HamBot:
 
         This method performs the following actions:
         1. Stops the Lidar if it is enabled.
-        2. Moves the left motor to the 0-degree position without blocking.
-        3. Moves the right motor to the 0-degree position and waits for completion.
-        4. Stops both motors to ensure the robot halts all movement.
-        5. Stops the thread that tracks motor positions, ensuring it terminates cleanly.
+        2. Stops both motors to ensure the robot halts all movement.
+        3. Stops the thread that tracks motor positions, ensuring it terminates cleanly.
 
         This function is typically called during shutdown or when the robot needs to be safely disconnected
         from its operational state.
         """
+        self.stop_motors()
         if self.lidar is not None:
             self.lidar.stop_lidar()
         if self.camera is not None:
             self.camera.stop_camera()
-        self.left_motor.run_to_position(0, blocking=False)
-        self.right_motor.run_to_position(0)
         self.stop_thread = True
         self.position_thread.join()
-        time.sleep(1)
-        self.stop_motors()
         self.imu.stop()
 
 
