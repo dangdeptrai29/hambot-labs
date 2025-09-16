@@ -3,14 +3,14 @@ import math, time
 from robot_systems.robot import HamBot  # your provided wrapper around buildhat Motors
 
 # ---------- Robot params (from assignment) ----------
-R_WHEEL = 0.05     # m
-AXLE_L  = 0.10     # m
-OMEGA_MAX = 20.0   # rad/s  (motor)
-V_WHEEL_MAX = R_WHEEL * OMEGA_MAX  # 1.0 m/s
+R_WHEEL = 0.045     # m
+AXLE_L  = 0.184     # m
+OMEGA_MAX = 18.0   # rad/s  (motor)
+V_WHEEL_MAX = R_WHEEL * OMEGA_MAX  # 0.81 m/s
 
 # body rates at "max"
-V_BODY_MAX = (V_WHEEL_MAX + V_WHEEL_MAX) / 2.0        # straight at 1.0 m/s
-OMEGA_BODY_MAX = ( V_WHEEL_MAX - (-V_WHEEL_MAX) )/AXLE_L  # in-place spin at 20 rad/s
+V_BODY_MAX = (V_WHEEL_MAX + V_WHEEL_MAX) / 2.0        # straight at 0.81 m/s
+OMEGA_BODY_MAX = ( V_WHEEL_MAX - (-V_WHEEL_MAX) )/AXLE_L  # in-place spin at 18 rad/s
 
 # ---------- Waypoints (x, y, theta) ----------
 WPTS = [
