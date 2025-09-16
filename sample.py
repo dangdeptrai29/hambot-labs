@@ -102,12 +102,16 @@ for i in range(1, len(WPTS)):
     dth2 = wrap_pi(p1[2] - hdg_to_next)              # rotate to required θ at waypoint
     Tspin2 = abs(dth2) / OMEGA_BODY_MAX
 
-    segments.append((D, dth1, Tspin1, Tmove, dth2, Tspin2))
+    segment = (D, dth1, Tspin1, Tmove, dth2, Tspin2)
+    segments.append(segment)
     total_D += D
     total_T += (Tspin1 + Tmove + Tspin2)
 
     print(f"{i:>3} | P{i-1}->P{i}  "
           f"| {D:6.3f} | {dth1:+11.6f} -> {Tspin1:6.3f} | {Tmove:7.3f} | {dth2:+11.6f} -> {Tspin2:6.3f}")
+
+    # advance theta so the next leg begins from the waypoint's final heading
+    theta = p1[2]
 
 print(f"\nTotal path length D_total = {total_D:.3f} m")
 print(f"Total travel time  T_total = {total_T:.3f} s "
