@@ -1,21 +1,21 @@
 # navigate_waypoints.py
 import math, time
-from robot_systems.robot import HamBot  # your provided wrapper around buildhat Motors
+from robot_systems.robot import HamBot 
 
-# ---------- Robot params (from assignment) ----------
-R_WHEEL = 0.045     # m
-AXLE_L  = 0.184     # m
-OMEGA_MAX = 18.0   # rad/s  (motor)
-V_WHEEL_MAX = R_WHEEL * OMEGA_MAX  # 0.81 m/s
+# ---------- Robot params ----------
+R_WHEEL = 0.045          # wheel radius (m)
+AXLE_L  = 0.184          # axle length (distance between wheel contact points), m
+OMEGA_MAX = 18.0         # motor shaft max rad/s (spec)
+V_WHEEL_MAX = R_WHEEL * OMEGA_MAX  # max wheel linear speed = 0.81 m/s
 
 # body rates at "max"
-V_BODY_MAX = (V_WHEEL_MAX + V_WHEEL_MAX) / 2.0        # straight at 0.81 m/s
-OMEGA_BODY_MAX = ( V_WHEEL_MAX - (-V_WHEEL_MAX) )/AXLE_L  # in-place spin at 18 rad/s
+V_BODY_MAX = (V_WHEEL_MAX + V_WHEEL_MAX) / 2.0        # = 0.81 m/s
+OMEGA_BODY_MAX = ( V_WHEEL_MAX - (-V_WHEEL_MAX) )/AXLE_L  # in-place spin at 8.8 rad/s
 
 # ---------- Waypoints (x, y, theta) ----------
 WPTS = [
-    ( 2.0, -2.0, math.pi/2),   # P0 (start)
-    (-1.5, -2.0, math.pi/2),   # P1
+    ( 2.0, -2.0, math.pi),   # P0 (start)
+    (-1.5, -2.0, math.pi),   # P1
     (-2.0, -1.5, math.pi/2),   # P2
     (-2.0, -0.5, math.pi/2),   # P3
     (-1.0, -0.5, 3*math.pi/2), # P4
@@ -41,19 +41,22 @@ def dist(p, q):
 
 def wheel_speeds_from_body(v, omega):
     # v = (vr+vl)/2 ; omega = (vr - vl)/L  -> solve:
+    # vr = v + 0.5*L*omega
+    # vl = v - 0.5*L*omega
     vr = v + 0.5*AXLE_L*omega
     vl = v - 0.5*AXLE_L*omega
     return vl, vr
 
 def run_spin(bot, dtheta):
-    # sign sets direction: CCW positive -> left wheel backward, right wheel forward
+    # Spins robot in place by dtheta radians.
+    # Time to spin: t = |dtheta| / |omega|
     omega = OMEGA_BODY_MAX if dtheta >= 0 else -OMEGA_BODY_MAX
     vl, vr = wheel_speeds_from_body(0.0, omega)
     t = abs(dtheta) / abs(omega)
     # scale to ±100% motor speed (your Motor API uses a percent-like value)
     scale = 100.0 * (abs(vr)/V_WHEEL_MAX)
     # normalize both wheels by the same factor so |vr| maps to 100%
-    k = 100.0 / (V_WHEEL_MAX)  # 1.0 -> 100%
+    k = 100.0 / (V_WHEEL_MAX) 
     bot.set_left_motor_speed(k*vl)
     bot.set_right_motor_speed(k*vr)
 
@@ -67,6 +70,8 @@ def run_spin(bot, dtheta):
     print(f"   [spin] measured T≈{time.time()-t0:.3f}s")
 
 def run_straight(bot, distance):
+    # Moves robot straight by 'distance' meters.
+    # Time to move: t = |distance| / |v|
     v = V_BODY_MAX if distance >= 0 else -V_BODY_MAX
     vl, vr = wheel_speeds_from_body(v, 0.0)  # equal wheels
     t = abs(distance) / abs(v) if v != 0 else 0.0
@@ -86,7 +91,7 @@ theta = WPTS[0][2]
 total_D = 0.0
 total_T = 0.0
 
-print("\n=== PRE-COMPUTED PLAN (max wheel speed 1.0 m/s) ===")
+print("\n=== PRE-COMPUTED PLAN (max wheel speed 0.81 m/s) ===")
 print("Idx | Segment                | D (m)   | rot→bearing (rad)  Tspin (s) | Tmove (s) | rot→θ_i (rad)  Tspin (s)")
 for i in range(1, len(WPTS)):
     p0 = WPTS[i-1]
@@ -97,7 +102,7 @@ for i in range(1, len(WPTS)):
     dth1 = wrap_pi(hdg_to_next - theta)              # rotate to face segment
     Tspin1 = abs(dth1) / OMEGA_BODY_MAX
 
-    Tmove = D / V_BODY_MAX                           # straight at 1 m/s
+    Tmove = D / V_BODY_MAX                           # straight at 0.81 m/s
 
     dth2 = wrap_pi(p1[2] - hdg_to_next)              # rotate to required θ at waypoint
     Tspin2 = abs(dth2) / OMEGA_BODY_MAX
@@ -141,8 +146,21 @@ bot.stop_motors()
 print("\nDone.\n")
 
 # ---------- REQUIRED: Arc segment P12 -> P13 with given VR, VL, T ----------
-print("=== ARC SEGMENT (P12 → P13) — required calculation ===")
 # Given:
+#   VR = right wheel speed (m/s)
+#   VL = left wheel speed (m/s)
+#   T  = time (s)
+# Compute:
+#   v = (VR + VL)/2         # body linear speed
+#   omega = (VR - VL)/L     # body angular rate
+#   R = v/omega             # turning radius
+#   ICC = (x0 - R*sin(th0), y0 + R*cos(th0))  # center of rotation
+#   theta_travel = omega * T
+#   arc_len = v * T
+#   New pose after arc:
+#     x_end = cos(theta_travel)*(x0-ICCx) - sin(theta_travel)*(y0-ICCy) + ICCx
+#     y_end = sin(theta_travel)*(x0-ICCx) + cos(theta_travel)*(y0-ICCy) + ICCy
+#     th_end = wrap_pi(th0 + theta_travel)
 VR = 0.24  # m/s
 VL = 0.80  # m/s
 T  = 0.50  # s
