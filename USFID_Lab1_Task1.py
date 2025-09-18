@@ -76,8 +76,8 @@ def run_straight(bot, distance):
     vl, vr = wheel_speeds_from_body(v, 0.0)  # equal wheels
     t = abs(distance) / abs(v) if v != 0 else 0.0
     k = 100.0 / (V_WHEEL_MAX)
-    bot.set_left_motor_speed(k*vl)
-    bot.set_right_motor_speed(k*vr)
+    bot.set_left_motor_speed(vl)
+    bot.set_right_motor_speed(vr)
 
     t0 = time.time()
     print(f"   [move]  vl={vl:+.2f} m/s, vr={vr:+.2f} m/s, D={distance:.3f} m, T={t:.3f}s")
