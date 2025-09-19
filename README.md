@@ -84,6 +84,20 @@ Arcs happen at:
   ```python
   bot = HamBot(lidar_enabled=False, camera_enabled=False)
   ```
+- To deploy and run your code on the HamBot:
+  1. Turn on the HamBot and make sure it is connected to your network.  
+  2. From your local computer, transfer the file with:
+     ```bash
+     scp .\navigate_waypoints.py hambot@10.42.0.1:~/Desktop/
+     ```
+  3. SSH into the robot (if needed) and move to the Desktop directory:
+     ```bash
+     cd ~/Desktop
+     ```
+  4. Run the script on the robot:
+     ```bash
+     python3 navigate_waypoints.py
+     ```
 
 ---
 
