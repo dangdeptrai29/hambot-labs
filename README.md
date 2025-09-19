@@ -85,17 +85,15 @@ Arcs happen at:
   bot = HamBot(lidar_enabled=False, camera_enabled=False)
   ```
 - To deploy and run your code on the HamBot:
-  1. Turn on the HamBot and make sure it is connected to your network.  
-  2. From your local computer, transfer the file with:
+  1. Turn on the HamBot and check the **IP address displayed on the robot’s LED**.  
+  2. From your local computer, transfer the file using that IP (replace `<ROBOT_IP>`):
      ```bash
-     scp .\navigate_waypoints.py hambot@10.42.0.1:~/Desktop/
+     scp ./navigate_waypoints.py hambot@<ROBOT_IP>:~/Desktop/
      ```
-  3. SSH into the robot (if needed) and move to the Desktop directory:
+  3. Open **VNC Viewer** on your computer, enter `<ROBOT_IP>` to connect to the robot’s Raspberry Pi desktop.  
+  4. Once connected via VNC, open a terminal on the robot’s desktop and run:
      ```bash
      cd ~/Desktop
-     ```
-  4. Run the script on the robot:
-     ```bash
      python3 navigate_waypoints.py
      ```
 
