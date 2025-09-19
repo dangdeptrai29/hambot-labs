@@ -14,7 +14,7 @@ V_WHEEL_MAX_HW = (RPM_MAX/60.0) * (2.0*math.pi*R_WHEEL)  # ≈ 0.353 m/s
 OMEGA_MAX_HW   = (2.0*V_WHEEL_MAX_HW) / AXLE_L           # rad/s (in-place spin)
 
 # One knob: slow everything (time stretches so geometry is preserved)
-SPEED_SCALE = 0.5
+SPEED_SCALE = 1.0
 
 # One knob: shrink the whole route for small rooms (distances & radii)
 PATH_SCALE = 0.35      # try 0.25–0.50; smaller = shorter route
@@ -82,7 +82,7 @@ def run_wheels_for_geom(bot, VL_mps, VR_mps, T_nom):
 
 # ========= 5) Motion primitives =========
 def do_spin(bot, dtheta):
-    """Forward-safe spin in place by dtheta [rad] using hardware max yaw."""
+    """Spin in place by dtheta [rad] using hardware max yaw (forward-safe)."""
     sgn = 1.0 if dtheta >= 0 else -1.0
     T_nom = abs(dtheta) / OMEGA_MAX_HW if OMEGA_MAX_HW > 0 else 0.0
     VR = +sgn * V_WHEEL_MAX_HW
@@ -92,8 +92,8 @@ def do_spin(bot, dtheta):
 
 def do_straight(bot, D):
     """Forward-only straight: distance D [m]; always go forward (D>=0)."""
-    D = abs(D) * PATH_SCALE                       # shrink for small room
-    v = V_WHEEL_MAX_HW                            # forward
+    D = abs(D) * PATH_SCALE                      # shrink for small room
+    v = V_WHEEL_MAX_HW                           # forward
     T_nom = D / v if v > 1e-9 else 0.0
     print(f"[MOVE] D_scaled={D:.3f} m, T_nom={T_nom:.3f}s")
     run_wheels_for_geom(bot, v, v, T_nom)
@@ -127,10 +127,6 @@ def do_arc_given_shrunk(bot, VR, VL, T):
     """
     P12->P13 with given (VR, VL, T), but *shrink distance by PATH_SCALE*
     while keeping the same heading change (Δθ).
-      - Compute original v, ω from VR,VL,
-      - Keep ω the same (so Δθ = ω*T stays identical),
-      - Scale v' = PATH_SCALE * v, then rebuild VR', VL' from (v', ω),
-      - Run for the same T (Δθ unchanged), distance shrinks by PATH_SCALE.
     """
     v  = 0.5 * (VR + VL)
     w  = (VR - VL) / AXLE_L
@@ -147,6 +143,7 @@ if __name__ == "__main__":
     print(f"RPM_MAX=±{RPM_MAX:.0f}, V_WHEEL_MAX_HW={V_WHEEL_MAX_HW:.3f} m/s, "
           f"OMEGA_MAX_HW={OMEGA_MAX_HW:.3f} rad/s, SPEED_SCALE={SPEED_SCALE:.2f}, PATH_SCALE={PATH_SCALE:.2f}")
 
+    # <-- FIX: define theta before using it
     theta = WPTS[0][2]  # assume start at P0 heading
 
     for i in range(1, len(WPTS)):
@@ -154,30 +151,44 @@ if __name__ == "__main__":
         th0, th1 = p0[2], p1[2]
         print(f"\n-- Segment P{i-1} -> P{i} --")
 
+        # Special case: at P10 (segment P10->P11), spin +90° first, then arc
+        if i == 11:
+            spin_90 = -math.pi / 2.0   # <-- flip direction: CW 90°
+            print("[P10] Pre-arc spin -90° (CW)")
+            do_spin(bot, spin_90)
+            th0_after = wrap_pi(th0 + spin_90)
+            dtheta_rem = wrap_pi(th1 - th0_after)
+            print(f"[P10] Remaining Δθ for arc = {dtheta_rem:+.3f} rad")
+            do_arc_fixed_R(bot, dtheta_rem, ARC_R_FIXED_ABS)
+            theta = th1
+            print(f"[DONE] Now at P{i} = ({p1[0]:.2f}, {p1[1]:.2f}, {p1[2]:.2f} rad)")
+            continue
+
+        # Regular fixed-radius arcs for the other flagged segments
         if i in ARC_DESTS_FIXED_R:
-            # True arc (forward-only) with radius scaled by PATH_SCALE
             dtheta = wrap_pi(th1 - th0)
             do_arc_fixed_R(bot, dtheta, ARC_R_FIXED_ABS)
             theta = th1
+            print(f"[DONE] Now at P{i} = ({p1[0]:.2f}, {p1[1]:.2f}, {p1[2]:.2f} rad)")
             continue
 
         # Otherwise: spin -> forward straight -> spin (with distances scaled)
-        # Bearing is unchanged by uniform scaling, so we can use geometry as-is.
         hdg = bearing(p0, p1)
         dth1 = wrap_pi(hdg - theta)
         if abs(dth1) > 1e-6: do_spin(bot, dth1)
 
-        D_nom = dist(p0, p1)    # nominal distance before scaling
-        do_straight(bot, D_nom) # will apply PATH_SCALE internally (forward-only)
+        D_nom = dist(p0, p1)          # nominal distance before scaling
+        do_straight(bot, D_nom)       # applies PATH_SCALE internally
 
         dth2 = wrap_pi(th1 - hdg)
         if abs(dth2) > 1e-6: do_spin(bot, dth2)
 
         theta = th1
+        print(f"[DONE] Now at P{i} = ({p1[0]:.2f}, {p1[1]:.2f}, {p1[2]:.2f} rad)")
 
     # Final arc: P12 -> P13 (given wheels) but shrink distance by PATH_SCALE, keep Δθ
     print("\n-- Segment P12 -> P13 (given wheels, distance shrunk) --")
-    do_arc_given_shrunk(bot, VR=0.24, VL=0.80, T=0.50)
+    do_arc_given_shrunk(bot, VR=GIVEN_P12_P13["VR"], VL=GIVEN_P12_P13["VL"], T=GIVEN_P12_P13["T"])
 
     bot.stop_motors()
     print("\nDone.\n")
