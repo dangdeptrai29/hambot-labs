@@ -25,6 +25,11 @@ The motion has been scaled down so it fits inside a **small room**, while still 
 
 You can **tune `PATH_SCALE`** (0.25–0.50) to make the route smaller or larger depending on your test area.
 
+### 🧭 Orientation Reference
+This compass shows how robot headings (θ) are measured:
+
+![Compass Orientation](compass.png)
+
 ---
 
 ## 📍 Waypoints
@@ -52,6 +57,9 @@ Arcs happen at:
 - **P3→P4** (fixed radius arc)  
 - **P10→P11** (spin first, then arc)  
 - **P12→P13** (given wheel speeds VR=0.24, VL=0.80, T=0.50)  
+
+### 🖼️ Path Route Diagram
+![HamBot Path Route](path_route.png)
 
 ---
 
