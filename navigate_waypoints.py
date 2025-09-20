@@ -22,27 +22,27 @@ PATH_SCALE = 0.35      # try 0.25–0.50; smaller = shorter route
 # ========= 2) Waypoints (original) =========
 # These are the *nominal* poses; the runtime geometry will be scaled by PATH_SCALE.
 WPTS = [
-    # ( 2.0, -2.0, math.pi),      # P0
-    # (-1.5, -2.0, math.pi),      # P1
-    # (-2.0, -1.5, math.pi/2),    # P2  <- ARC
-    # (-2.0, -0.5, math.pi/2),    # P3
-    # (-1.0, -0.5, 3*math.pi/2),  # P4  <- ARC
-    # (-0.5, -1.0, 7*math.pi/4),  # P5
-    # ( 2.0, -1.0, 0.0),          # P6
-    # ( 2.0,  0.0, math.pi/2),    # P7
-    # ( 0.0,  0.0, math.pi),      # P8
-    # ( 0.0,  1.0, math.pi/2),    # P9
-    # (-2.0,  1.0, math.pi),      # P10 <- ARC
-    # (-1.0,  2.0, 0.0),          # P11
-    # ( 1.5,  2.0, 0.0),          # P12 <- ARC to P13 (given wheels)
+     ( 2.0, -2.0, math.pi),      # P0
+     (-1.5, -2.0, math.pi),      # P1
+     (-2.0, -1.5, math.pi/2),    # P2  <- ARC
+     (-2.0, -0.5, math.pi/2),    # P3
+     (-1.0, -0.5, 3*math.pi/2),  # P4  <- ARC
+     (-0.5, -1.0, 7*math.pi/4),  # P5
+     ( 2.0, -1.0, 0.0),          # P6
+     ( 2.0,  0.0, math.pi/2),    # P7
+     ( 0.0,  0.0, math.pi),      # P8
+     ( 0.0,  1.0, math.pi/2),    # P9
+     (-2.0,  1.0, math.pi),      # P10 <- ARC
+     (-1.0,  2.0, 0.0),          # P11
+     ( 1.5,  2.0, 0.0),          # P12 <- ARC to P13 (given wheels)
 
-    #New points
-    (0.0,0.0),   #P0
-    (0.0,0.1),   #P1
-    (-1.0, 2.0), #P2
-    (-1.0, 3.0), #P3
-    (0.0, 3.0),  #P4
-    (1.0, 2.0)   #P5
+    # #New points
+    # (0.0,0.0),   #P0
+    # (0.0,0.1),   #P1
+    # (-1.0, 2.0), #P2
+    # (-1.0, 3.0), #P3
+    # (0.0, 3.0),  #P4
+    # (1.0, 2.0)   #P5
 
 ]
 # Segments to run as arcs (constant curvature)
