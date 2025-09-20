@@ -14,7 +14,7 @@ V_WHEEL_MAX_HW = (RPM_MAX/60.0) * (2.0*math.pi*R_WHEEL)  # ≈ 0.353 m/s
 OMEGA_MAX_HW   = (2.0*V_WHEEL_MAX_HW) / AXLE_L           # rad/s (in-place spin)
 
 # One knob: slow everything (time stretches so geometry is preserved)
-SPEED_SCALE = 1.0
+SPEED_SCALE = 0.75
 
 # One knob: shrink the whole route for small rooms (distances & radii)
 PATH_SCALE = 0.35      # try 0.25–0.50; smaller = shorter route
@@ -198,5 +198,8 @@ if __name__ == "__main__":
     print("\n-- Segment P12 -> P13 (given wheels, distance shrunk) --")
     do_arc_given_shrunk(bot, VR=GIVEN_P12_P13["VR"], VL=GIVEN_P12_P13["VL"], T=GIVEN_P12_P13["T"])
 
-    bot.stop_motors()
+    stopMotor()
     print("\nDone.\n")
+
+def  stopMotor ():
+    bot.stop_motors()
