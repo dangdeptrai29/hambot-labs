@@ -279,7 +279,7 @@ def run_full_sequence(
     # =======================
     # G) Stationary CCW 3°
     # =======================
-    target_rad = math.radians(8)  # 3 -> 5 -> 8 degrees
+    target_rad = math.radians(5)  # 3 -> 5  degrees
     print(f"[G] Stationary CCW 3°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -329,7 +329,7 @@ def run_full_sequence(
     # =======================
     # I) Stationary CCW 85°
     # =======================
-    target_rad = math.radians(70)  # 85 ->80 -> 78 degrees -> 70
+    target_rad = math.radians(78)  # 85 ->80 -> 78 degrees -> 70
     print(f"[I] Stationary CCW 78°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -428,7 +428,7 @@ def run_full_sequence(
     # =======================
     # M) Stationary CW 90°
     # =======================
-    target_rad = math.radians(83) # samller 90->83 ->87
+    target_rad = math.radians(83) # smaller 90->83 ->87
     print(f"[M] Stationary CW 90°: spin in place (L=+{speed_spin}, R=-{speed_spin})")
     bot.set_left_motor_speed(+speed_spin)
     bot.set_right_motor_speed(-speed_spin)
@@ -524,7 +524,7 @@ def run_full_sequence(
     print(f"[P] Done: distance={P_dist:.4f} m (L={P_sL:.4f}, R={P_sR:.4f}) in {P_time:.3f} s")
 
     # =======================
-    # Q) Stationary CW 90°
+    # Q) Stationary CW 90° set facing  up before curve
     # =======================
     target_rad = math.radians(90)
     print(f"[Q] Stationary CW 90°: spin in place (L=+{speed_spin}, R=-{speed_spin})")
@@ -547,9 +547,9 @@ def run_full_sequence(
     print(f"[Q] Done: Δψ={Q_dpsi:.3f} rad (~-{target_rad:.3f}), time={Q_time:.3f} s")
 
     # =======================
-    # R) Stationary CW 180°
+    # R) Stationary CW 180° -> 135 curve
     # =======================
-    target_rad = math.radians(180)
+    target_rad = math.radians(135)
     print(f"[R] Arc CW 180°: outer L={speed_left_arc}, inner R={speed_right_arc} (scale={inner_scale_arc:.2f})")
     bot.set_left_motor_speed(speed_left_arc)
     bot.set_right_motor_speed(speed_right_arc)
@@ -574,10 +574,16 @@ def run_full_sequence(
     R_dist = 0.5 * (R_sL + R_sR)
     print(f"[R] Done: Δψ={R_dpsi:.3f} rad (~-{target_rad:.3f}), distance={R_dist:.4f} m, time={R_time:.3f} s")
 
+    # Apply settle+ramp before the next straight
+    bot.set_left_motor_speed(0)
+    bot.set_right_motor_speed(0)
+    time.sleep(0.12)
+    settle_and_ramp_to(speed_outer, speed_outer)
+
     # =======================
-    # S) Stationary CCW 45°
+    # S) Stationary CCW 20°-> before going next staright
     # =======================
-    target_rad = math.radians(42)  # 45 -> 25 -> 30 ->42 edited 
+    target_rad = math.radians(13)  # 25 -> 20 -> 13 edited 
     print(f"[S] Stationary CCW 38°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -652,8 +658,6 @@ def run_full_sequence(
     U_time = time.monotonic() - U_t0
     U_dist = 0.5 * (U_sL + U_sR)
     print(f"[U] Done: Δψ={U_dpsi:.3f} rad (~-{target_rad:.3f}), distance={U_dist:.4f} m, time={U_time:.3f} s")
-    bot.set_left_motor_speed(0)
-    bot.set_right_motor_speed(0)
     
     # print(f"[U] Stationary CW 87.17: spin in place")
 
