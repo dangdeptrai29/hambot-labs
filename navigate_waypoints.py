@@ -144,6 +144,12 @@ def do_arc_given_shrunk(bot, VR, VL, T):
     print(f"[ARC*] given VR={VR:.3f},VL={VL:.3f},T={T:.3f}  -> shrunk VR'={VR2:.3f}, VL'={VL2:.3f}, T'={T:.3f}")
     run_wheels_for_geom(bot, VL2, VR2, T)
 
+def settle(bot, pause=0.25):            # stall time = 0.25s
+    """Stop motors and pause briefly for stability."""
+    bot.stop_motors()
+    time.sleep(pause)
+
+
 # ========= 6) Main: execute the route =========
 if __name__ == "__main__":
     bot = HamBot(lidar_enabled=False, camera_enabled=False)
@@ -164,6 +170,7 @@ if __name__ == "__main__":
             spin_90 = -math.pi / 2.0   # <-- flip direction: CW 90°
             print("[P10] Pre-arc spin -90° (CW)")
             do_spin(bot, spin_90)
+            settle(bot) 
             th0_after = wrap_pi(th0 + spin_90)
             dtheta_rem = wrap_pi(th1 - th0_after)
             print(f"[P10] Remaining Δθ for arc = {dtheta_rem:+.3f} rad")
@@ -176,6 +183,7 @@ if __name__ == "__main__":
         if i in ARC_DESTS_FIXED_R:
             dtheta = wrap_pi(th1 - th0)
             do_arc_fixed_R(bot, dtheta, ARC_R_FIXED_ABS)
+            settle(bot)         # stall for better handling
             theta = th1
             print(f"[DONE] Now at P{i} = ({p1[0]:.2f}, {p1[1]:.2f}, {p1[2]:.2f} rad)")
             continue
@@ -186,6 +194,7 @@ if __name__ == "__main__":
         if abs(dth1) > 1e-6: do_spin(bot, dth1)
 
         D_nom = dist(p0, p1)          # nominal distance before scaling
+        settle(bot)                   # stall for better handling
         do_straight(bot, D_nom)       # applies PATH_SCALE internally
 
         dth2 = wrap_pi(th1 - hdg)
@@ -196,6 +205,7 @@ if __name__ == "__main__":
 
     # Final arc: P12 -> P13 (given wheels) but shrink distance by PATH_SCALE, keep Δθ
     print("\n-- Segment P12 -> P13 (given wheels, distance shrunk) --")
+    settle(bot)
     do_arc_given_shrunk(bot, VR=GIVEN_P12_P13["VR"], VL=GIVEN_P12_P13["VL"], T=GIVEN_P12_P13["T"])
 
     stopMotor()
