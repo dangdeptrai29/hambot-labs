@@ -14,7 +14,7 @@ V_WHEEL_MAX_HW = (RPM_MAX/60.0) * (2.0*math.pi*R_WHEEL)  # ≈ 0.353 m/s
 OMEGA_MAX_HW   = (2.0*V_WHEEL_MAX_HW) / AXLE_L           # rad/s (in-place spin)
 
 # One knob: slow everything (time stretches so geometry is preserved)
-SPEED_SCALE = 1.0
+SPEED_SCALE = 0.75
 
 # One knob: shrink the whole route for small rooms (distances & radii)
 PATH_SCALE = 0.35      # try 0.25–0.50; smaller = shorter route
@@ -22,21 +22,29 @@ PATH_SCALE = 0.35      # try 0.25–0.50; smaller = shorter route
 # ========= 2) Waypoints (original) =========
 # These are the *nominal* poses; the runtime geometry will be scaled by PATH_SCALE.
 WPTS = [
-    ( 2.0, -2.0, math.pi),      # P0
-    (-1.5, -2.0, math.pi),      # P1
-    (-2.0, -1.5, math.pi/2),    # P2  <- ARC
-    (-2.0, -0.5, math.pi/2),    # P3
-    (-1.0, -0.5, 3*math.pi/2),  # P4  <- ARC
-    (-0.5, -1.0, 7*math.pi/4),  # P5
-    ( 2.0, -1.0, 0.0),          # P6
-    ( 2.0,  0.0, math.pi/2),    # P7
-    ( 0.0,  0.0, math.pi),      # P8
-    ( 0.0,  1.0, math.pi/2),    # P9
-    (-2.0,  1.0, math.pi),      # P10 <- ARC
-    (-1.0,  2.0, 0.0),          # P11
-    ( 1.5,  2.0, 0.0),          # P12 <- ARC to P13 (given wheels)
-]
+     ( 2.0, -2.0, math.pi),      # P0
+     (-1.5, -2.0, math.pi),      # P1
+     (-2.0, -1.5, math.pi/2),    # P2  <- ARC
+     (-2.0, -0.5, math.pi/2),    # P3
+     (-1.0, -0.5, 3*math.pi/2),  # P4  <- ARC
+     (-0.5, -1.0, 7*math.pi/4),  # P5
+     ( 2.0, -1.0, 0.0),          # P6
+     ( 2.0,  0.0, math.pi/2),    # P7
+     ( 0.0,  0.0, math.pi),      # P8
+     ( 0.0,  1.0, math.pi/2),    # P9
+     (-2.0,  1.0, math.pi),      # P10 <- ARC
+     (-1.0,  2.0, 0.0),          # P11
+     ( 1.5,  2.0, 0.0),          # P12 <- ARC to P13 (given wheels)
 
+    # #New points
+    # (0.0,0.0),   #P0
+    # (0.0,0.1),   #P1
+    # (-1.0, 2.0), #P2
+    # (-1.0, 3.0), #P3
+    # (0.0, 3.0),  #P4
+    # (1.0, 2.0)   #P5
+
+]
 # Segments to run as arcs (constant curvature)
 ARC_DESTS_FIXED_R = {2, 4, 11}         # P1→P2, P3→P4, P10→P11
 ARC_R_FIXED_ABS   = 0.50 * PATH_SCALE  # [m] shrink the radius with the path
@@ -190,5 +198,8 @@ if __name__ == "__main__":
     print("\n-- Segment P12 -> P13 (given wheels, distance shrunk) --")
     do_arc_given_shrunk(bot, VR=GIVEN_P12_P13["VR"], VL=GIVEN_P12_P13["VL"], T=GIVEN_P12_P13["T"])
 
-    bot.stop_motors()
+    stopMotor()
     print("\nDone.\n")
+
+def  stopMotor ():
+    bot.stop_motors()
