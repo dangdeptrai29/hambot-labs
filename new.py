@@ -76,7 +76,8 @@ def run_full_sequence(
 ):
     """
     Sequence (all in one flow):
-
+    #changed frequently to fit the maze
+    #tested on floor without carpet -> carpet ==> too much friction 
     A) Straight 1.16 m
     B) CW arc 90° or pi/2
     C) Straight 0.33 m
@@ -278,7 +279,7 @@ def run_full_sequence(
     # =======================
     # G) Stationary CCW 3°
     # =======================
-    target_rad = math.radians(5)  # 3 -> 5 degrees
+    target_rad = math.radians(8)  # 3 -> 5 -> 8 degrees
     print(f"[G] Stationary CCW 3°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -576,8 +577,8 @@ def run_full_sequence(
     # =======================
     # S) Stationary CCW 45°
     # =======================
-    target_rad = math.radians(30)  # 45 -> 25 -> 30 edited 
-    print(f"[S] Stationary CCW 5°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
+    target_rad = math.radians(42)  # 45 -> 25 -> 30 ->42 edited 
+    print(f"[S] Stationary CCW 38°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
     S_L0, S_R0 = bot.get_encoder_readings()
@@ -601,11 +602,12 @@ def run_full_sequence(
     bot.set_right_motor_speed(0)
     time.sleep(0.12)
     settle_and_ramp_to(speed_outer, speed_outer)
+
     # =======================
     # T) Straight 0.66 m
     # =======================
     target_dist = 0.70  #edited
-    print(f"[T] Straight: target {target_dist:.3f} m at speed {speed_outer}")
+    print(f"[T] Straight 0.66: target {target_dist:.3f} m at speed {speed_outer}")
     T_sL = T_sR = 0.0
     T_t0 = time.monotonic()
 
@@ -621,44 +623,57 @@ def run_full_sequence(
     T_dist = 0.5 * (T_sL + T_sR)
     print(f"[T] Done: distance={T_dist:.4f} m (L={T_sL:.4f}, R={T_sR:.4f}) in {T_time:.3f} s")
 
+
     # =======================
     # U) Stationary CW 87.17°
     # =======================
     
-    print(f"[U] Stationary CW 87.17: spin in place")
-
-    Total_Time = 0.5
-    Vl = 0.8
-    Vr = 0.24
-
-    bot.set_left_motor_speed(+Vl)
-    bot.set_right_motor_speed(+Vr)
-    angular_v = (Vr - Vl)/AXLE_LENGTH
-    result = Total_Time * angular_v
-
-    degrees = result*(180/math.pi)
-    target_rad = math.radians(degrees)
-    print(f"[U] rotation is", degrees)
+    target_rad = math.radians(87.7) # 87.17 -> changed to 87.7 for visualization 
+    print(f"[U] Arc CW 87.17: outer L={speed_left_arc}, inner R={speed_right_arc} (scale={inner_scale_arc:.2f})")
+    bot.set_left_motor_speed(speed_left_arc)
+    bot.set_right_motor_speed(speed_right_arc)
     U_L0, U_R0 = bot.get_encoder_readings()
+    U_sL = U_sR = 0.0
+
     U_dpsi = 0.0 
     U_t0 = time.monotonic()
     while True:
         time.sleep(poll)
-        prev_now, (_, _, _, _, _) = _poll_and_print(prev[0], prev[1], prev[2], "[U] Final arch")
+        prev_now, (_, _, dsL, dsR, _) = _poll_and_print(prev[0], prev[1], prev[2], "[U] Final arch 87.17")
         prev = prev_now
+        U_sL += dsL
+        U_sR += dsR
+
         theta_L_now, theta_R_now = prev[0], prev[1]
         U_dpsi = (WHEEL_RADIUS / AXLE_LENGTH) * ((theta_R_now - U_R0) - (theta_L_now - U_L0))
-        if U_dpsi <= target_rad:
+        if abs(U_dpsi) >= target_rad:
             break
-    U_time = time.monotonic() - U_t0
-    print(f"[S] Done: Δψ={U_dpsi:.3f} rad (~+{target_rad:.3f}), time={U_time:.3f} s")
 
-    # Stop/reset ONCE at the very end
-    reset_motors_and_encoders()
-    print_encoder_readings("After full sequence")
+    U_time = time.monotonic() - U_t0
+    U_dist = 0.5 * (U_sL + U_sR)
+    print(f"[U] Done: Δψ={U_dpsi:.3f} rad (~-{target_rad:.3f}), distance={U_dist:.4f} m, time={U_time:.3f} s")
+    bot.set_left_motor_speed(0)
+    bot.set_right_motor_speed(0)
+    
+    # print(f"[U] Stationary CW 87.17: spin in place")
+
+    # bot.set_left_motor_speed(0.8)
+    # bot.set_right_motor_speed(0.24)
+    # angular_v = (0.24 - 0.8)/AXLE_LENGTH
+    # print(f"[U] Stationary CW ", angular_v ,"angular speed")
+    # result = 0.5 * angular_v
+    # print(f"[U] Stationary CW ", result ," rads")
+
+    # degrees = result*(180/math.pi)
+    # target_rad = math.radians(degrees)
+    # print(f"[U] Stationary CW ", degrees ," degrees")
+    
+
+
 
     # Summary (optional)
     print("\n=== SUMMARY ===")
+    print (f"[0] 0.00s, 0.00m, Robot Before Starting Maze")
     print(f"[A] Straight 1.16m: {A_dist:.4f} m in {A_time:.3f} s")
     print(f"[B] Arc CW 90°: Δψ={B_dpsi:.3f} rad, {B_dist:.4f} m in {B_time:.3f} s")
     print(f"[C] Straight 0.33m: {C_dist:.4f} m in {C_time:.3f} s")
@@ -676,6 +691,10 @@ def run_full_sequence(
     print(f"[O] Spin CCW 90°: Δψ={O_dpsi:.3f} rad in {O_time:.3f} s")
     print(f"[P] Straight 0.66m: {P_dist:.4f} m in {P_time:.3f} s")
     print(f"[Q] Spin CW 90°: Δψ={Q_dpsi:.3f} rad in {Q_time:.3f} s")
+    print(f"[R] Spin CW 180°: Δψ={R_dpsi:.3f} rad in {R_time:.3f} s")
+    print(f"[S] Spin CCW 45: Δψ={S_dpsi:.3f} rad in {S_time:.3f} s")
+    print(f"[T] Straight 0.66: Δψ={T_dist:.3f} rad in {T_time:.3f} s")
+    print(f"[U] Spin CW 87.17°: Δψ={U_dpsi:.3f} rad in {U_time:.3f} s")
 
 def main():
     try:
