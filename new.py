@@ -278,7 +278,7 @@ def run_full_sequence(
     # =======================
     # G) Stationary CCW 3°
     # =======================
-    target_rad = math.radians(3)  # 3 degrees
+    target_rad = math.radians(5)  # 3 -> 5 degrees
     print(f"[G] Stationary CCW 3°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -328,7 +328,7 @@ def run_full_sequence(
     # =======================
     # I) Stationary CCW 85°
     # =======================
-    target_rad = math.radians(85)  # 85 degrees
+    target_rad = math.radians(70)  # 85 ->80 -> 78 degrees -> 70
     print(f"[I] Stationary CCW 78°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -357,7 +357,7 @@ def run_full_sequence(
     # =======================
     # J) Straight 0.33 m
     # =======================
-    target_dist = 0.33
+    target_dist = 0.33  #edited
     print(f"[J] Straight: target {target_dist:.3f} m at speed {speed_outer}")
     # Speeds already set by settle_and_ramp_to; just integrate distance.
     J_sL = J_sR = 0.0
@@ -378,7 +378,7 @@ def run_full_sequence(
     # =======================
     # K) Stationary CCW 90°
     # =======================
-    target_rad = math.radians(86)
+    target_rad = math.radians(70) #smaller 90-> 88 -> 85 ->80 ->78 -> 74 -> 70
     print(f"[K] Stationary CCW 90°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -427,7 +427,7 @@ def run_full_sequence(
     # =======================
     # M) Stationary CW 90°
     # =======================
-    target_rad = math.radians(82)
+    target_rad = math.radians(83) # samller 90->83 ->87
     print(f"[M] Stationary CW 90°: spin in place (L=+{speed_spin}, R=-{speed_spin})")
     bot.set_left_motor_speed(+speed_spin)
     bot.set_right_motor_speed(-speed_spin)
@@ -476,7 +476,7 @@ def run_full_sequence(
     # =======================
     # O) Stationary CCW 90°
     # =======================
-    target_rad = math.radians(86)
+    target_rad = math.radians(88)  #90 -> 80 edited
     print(f"[O] Stationary CCW 90°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
     bot.set_left_motor_speed(-speed_spin)
     bot.set_right_motor_speed(+speed_spin)
@@ -525,7 +525,7 @@ def run_full_sequence(
     # =======================
     # Q) Stationary CW 90°
     # =======================
-    target_rad = math.radians(88)
+    target_rad = math.radians(90)
     print(f"[Q] Stationary CW 90°: spin in place (L=+{speed_spin}, R=-{speed_spin})")
     bot.set_left_motor_speed(+speed_spin)
     bot.set_right_motor_speed(-speed_spin)
@@ -573,38 +573,59 @@ def run_full_sequence(
     R_dist = 0.5 * (R_sL + R_sR)
     print(f"[R] Done: Δψ={R_dpsi:.3f} rad (~-{target_rad:.3f}), distance={R_dist:.4f} m, time={R_time:.3f} s")
 
+    # =======================
+    # S) Stationary CCW 45°
+    # =======================
+    target_rad = math.radians(30)  # 45 -> 25 -> 30 edited 
+    print(f"[S] Stationary CCW 5°: spin in place (L=-{speed_spin}, R=+{speed_spin})")
+    bot.set_left_motor_speed(-speed_spin)
+    bot.set_right_motor_speed(+speed_spin)
+    S_L0, S_R0 = bot.get_encoder_readings()
+    S_dpsi = 0.0
+    S_t0 = time.monotonic()
+
+    while True:
+        time.sleep(poll)
+        prev_now, (_, _, _, _, _) = _poll_and_print(prev[0], prev[1], prev[2], "[S] Spin CCW")
+        prev = prev_now
+        theta_L_now, theta_R_now = prev[0], prev[1]
+        S_dpsi = (WHEEL_RADIUS / AXLE_LENGTH) * ((theta_R_now - S_R0) - (theta_L_now - S_L0))
+        if S_dpsi >= target_rad:
+            break
+
+    S_time = time.monotonic() - S_t0
+    print(f"[S] Done: Δψ={S_dpsi:.3f} rad (~+{target_rad:.3f}), time={S_time:.3f} s")
 
     # Apply settle+ramp before the next straight
     bot.set_left_motor_speed(0)
     bot.set_right_motor_speed(0)
     time.sleep(0.12)
     settle_and_ramp_to(speed_outer, speed_outer)
-
     # =======================
-    # S) Straight 0.66 m
+    # T) Straight 0.66 m
     # =======================
-    target_dist = 0.66
-    print(f"[S] Straight: target {target_dist:.3f} m at speed {speed_outer}")
-    S_sL = S_sR = 0.0
-    S_t0 = time.monotonic()
+    target_dist = 0.70  #edited
+    print(f"[T] Straight: target {target_dist:.3f} m at speed {speed_outer}")
+    T_sL = T_sR = 0.0
+    T_t0 = time.monotonic()
 
     while True:
         time.sleep(poll)
-        prev, (_, _, dsL, dsR, _) = _poll_and_print(prev[0], prev[1], prev[2], "[S] Straight")
-        S_sL += dsL
-        S_sR += dsR
-        if 0.5 * (S_sL + S_sR) >= target_dist:
+        prev, (_, _, dsL, dsR, _) = _poll_and_print(prev[0], prev[1], prev[2], "[T] Straight")
+        T_sL += dsL
+        T_sR += dsR
+        if 0.5 * (T_sL + T_sR) >= target_dist:
             break
 
-    S_time = time.monotonic() - S_t0
-    S_dist = 0.5 * (S_sL + S_sR)
-    print(f"[S] Done: distance={S_dist:.4f} m (L={S_sL:.4f}, R={S_sR:.4f}) in {S_time:.3f} s")
+    T_time = time.monotonic() - T_t0
+    T_dist = 0.5 * (T_sL + T_sR)
+    print(f"[T] Done: distance={T_dist:.4f} m (L={T_sL:.4f}, R={T_sR:.4f}) in {T_time:.3f} s")
 
     # =======================
-    # T) Stationary CW 87.17°
+    # U) Stationary CW 87.17°
     # =======================
     
-    print(f"[T] Stationary CW 90°: spin in place (L=+{Vl}, R=-{Vr})")
+    print(f"[U] Stationary CW 87.17: spin in place")
 
     Total_Time = 0.5
     Vl = 0.8
@@ -616,20 +637,21 @@ def run_full_sequence(
     result = Total_Time * angular_v
 
     degrees = result*(180/math.pi)
-
     target_rad = math.radians(degrees)
-
-    R_L0, R_R0 = bot.get_encoder_readings()
-    R_dpsi = 0.0 
-    R_t0 = time.monotonic()
+    print(f"[U] rotation is", degrees)
+    U_L0, U_R0 = bot.get_encoder_readings()
+    U_dpsi = 0.0 
+    U_t0 = time.monotonic()
     while True:
         time.sleep(poll)
-        prev_now, (_, _, _, _, _) = _poll_and_print(prev[0], prev[1], prev[2], "[R] Final arch")
+        prev_now, (_, _, _, _, _) = _poll_and_print(prev[0], prev[1], prev[2], "[U] Final arch")
         prev = prev_now
         theta_L_now, theta_R_now = prev[0], prev[1]
-        R_dpsi = (WHEEL_RADIUS / AXLE_LENGTH) * ((theta_R_now - R_R0) - (theta_L_now - R_L0))
-        if R_dpsi <= target_rad:
+        U_dpsi = (WHEEL_RADIUS / AXLE_LENGTH) * ((theta_R_now - U_R0) - (theta_L_now - U_L0))
+        if U_dpsi <= target_rad:
             break
+    U_time = time.monotonic() - U_t0
+    print(f"[S] Done: Δψ={U_dpsi:.3f} rad (~+{target_rad:.3f}), time={U_time:.3f} s")
 
     # Stop/reset ONCE at the very end
     reset_motors_and_encoders()
